@@ -4,14 +4,14 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strconv"
+	//"strconv"
 	//"time"
 	//"math/rand"
 )
 
 func main() {
 	BUFFER_SIZE := 1024
-	homePage := "www.example.com"
+	homePage := "http://www.example.com"
 	urlInput := make(chan Url, BUFFER_SIZE)
 	toCrawl := make(chan Url)
 	htmlOutput := make(chan Url)
@@ -19,9 +19,10 @@ func main() {
 	
 	// Seeding
 	go func() {
-		for i := 0; i < 100; i++ {
-			urlInput <- Url{url: homePage + "/" + strconv.Itoa(i % 100)}
-		}
+		urlInput <- Url{url: homePage}
+		// for i := 0; i < 100; i++ {
+		// 	urlInput <- Url{url: homePage + "/" + strconv.Itoa(i % 100)}
+		// }
 	}()
 
 	go urlFilter(urlInput, toCrawl)
