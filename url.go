@@ -1,7 +1,9 @@
 package main
 
+
 import (
-	"github.com/parnurzeal/gorequest"	
+	"github.com/parnurzeal/gorequest"
+	urllib "net/url"
 )
 
 
@@ -29,6 +31,31 @@ func (url *Url) GetUrl() string {
 
 func (url *Url) HasOutLinks() bool {
 	return len(url.outLinks) > 0
+}
+
+func IsSameHost(baseUrl string, extractedUrl string) bool {
+	rUrl := ResolveUrl(baseUrl, extractedUrl)
+	return Host(baseUrl) == Host(rUrl)
+}
+
+func Host(inputUrl string) string {
+	u, err := urllib.Parse(inputUrl)
+	if err != nil {
+		return ""
+	}
+	return u.Hostname()
+}
+
+func ResolveUrl(baseUrl string, relativeUrl string) string {
+	u, err := urllib.Parse(relativeUrl)
+	if err != nil {
+		return ""
+	}
+	b, err := urllib.Parse(baseUrl)
+	if err != nil {
+		return ""
+	}
+	return b.ResolveReference(u).String()
 }
 
 func NewUrlResponse(url string, resp gorequest.Response, body string) *UrlResponse {

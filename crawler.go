@@ -11,7 +11,7 @@ import (
 
 func main() {
 	BUFFER_SIZE := 1024
-	homePage := "http://www.example.com"
+	homePage := "http://brewkode.com"
 	urlInput := make(chan Url, BUFFER_SIZE)
 	toCrawl := make(chan Url)
 	htmlOutput := make(chan Url)
@@ -20,9 +20,6 @@ func main() {
 	// Seeding
 	go func() {
 		urlInput <- Url{url: homePage}
-		// for i := 0; i < 100; i++ {
-		// 	urlInput <- Url{url: homePage + "/" + strconv.Itoa(i % 100)}
-		// }
 	}()
 
 	go urlFilter(urlInput, toCrawl)

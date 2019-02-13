@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"time"
-	"math/rand"
-	// "github.com/jinzhu/copier"
+	"strings"
 	"github.com/parnurzeal/gorequest"
 	"github.com/hashicorp/go-multierror"
 	"github.com/PuerkitoBio/goquery"
@@ -27,7 +25,6 @@ func urlFilter(input <-chan Url, output chan Url) {
 }
 
 func fetchUrl(url Url) (UrlResponse, error) {
-	time.Sleep(time.Duration(rand.Intn(100)) * time.Millisecond)
 	resolvedUrl := url.GetUrl()
 	fmt.Printf("Fetching url %q\n", url.GetUrl())
 	resp, body, errors := gorequest.New().Get(resolvedUrl).End()
@@ -38,14 +35,14 @@ func fetchUrl(url Url) (UrlResponse, error) {
 		return UrlResponse{}, err
 	}
 	
-	fmt.Printf("Successfully fetched %q \n", url.url)
+	fmt.Printf("Successfully fetched %q. Content Size: %d\n", url.url, len(body))
 	return *NewUrlResponse(url.url, resp, body), nil
 }
 
 func fetcher(input chan Url, output chan Url) {
 	for url := range input {
 		urlResponse, error := fetchUrl(url)
-		if error != nil {
+		if error == nil {
 			out := Url{url: urlResponse.url, html: urlResponse.html, redirectedToUrl: urlResponse.redirectedUrl}
 			output <- out
 		} else {
@@ -57,29 +54,37 @@ func fetcher(input chan Url, output chan Url) {
 }
 
 func processHtml(url string, html string) []string {
-	time.Sleep(time.Duration(rand.Intn(50)) * time.Millisecond)
-	doc, err := goquery.NewDocumentFromReader(res.Body)
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
   	if err != nil {
     		fmt.Println(err)
+		return nil
   	}
-	doc.Find("a").FilterFunction(func(i int, s *Selection) bool {
+	// Process anchor tags. Resolve relative urls. Ignore urls from other host
+	a := doc.Find("a")
+	fmt.Printf("Url: %q, <a> tags: %d", url, a.Length())
+	urlsFromAnchor := a.FilterFunction(func(i int, s *goquery.Selection) bool {
 		href, exists := s.Attr("href")
-		// TODO: Complete the same host check
-	}).Map(func(i int, s *Selection) string {
-		// TODO: Resolve url
+		return exists && IsSameHost(url, href)
+	}).Map(func(i int, s *goquery.Selection) string {
+		href, _ := s.Attr("href")
+		return ResolveUrl(url, href)	
 	})
 	
 	// Handle images. They might come from CDNs, so same host check will fail
 	// Intentionally ignoring the other assets from link / script tags
-	doc.Find("img").FilterFunction(func(i int, s *Selection) bool {
-		src, srcExists := s.Attr("src")
-		href, hrefExists := s.Attr("href")
-		return srcExists || hrefExists
-	}).Map(func(i int, s *Selection) string {
-		// TODO: Resolve url
+	img := doc.Find("img")
+	fmt.Printf("Url: %q, <img> tags: %d", url, img.Length())
+	imgUrls := img.FilterFunction(func(i int, s *goquery.Selection) bool {
+		_, srcExists := s.Attr("src")
+		return srcExists
+	}).Map(func(i int, s *goquery.Selection) string {
+		src, _ := s.Attr("src")
+		return ResolveUrl(url, src)	
 	})
-	fmt.Printf("Got %d url(s) from html of %q\n", 1, url)
-	return append(make([]string, 1), url)
+	
+	outLinks := append(urlsFromAnchor, imgUrls...)
+	fmt.Printf("Got %d url(s) from html of %q\n", (len(outLinks)), url)
+	return outLinks
 }
 
 func linkExtractor(input chan Url, output chan Url) {
