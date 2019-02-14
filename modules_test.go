@@ -3,6 +3,7 @@ package main
 
 import (
        "testing"
+	"io/ioutil"
 	"sync"
        )
 
@@ -46,5 +47,27 @@ func TestUrlFilter(t *testing.T) {
 
 	if outputCount != expectedCount {
 		t.Errorf("UrlFilter did not work. Expected %d, Actual %d", expectedCount, len(output))
+	}
+}
+
+func TestParse(t *testing.T) {
+	test_cases := []struct {
+		url, path string
+		count int
+	}{
+		{"http://brewkode.com", "tests/fixtures/brewkode.html", 6},
+	}
+
+	for _, tc := range test_cases {
+	html, err := ioutil.ReadFile(tc.path)
+	if err != nil {
+		t.Errorf("Failed reading from file")
+	}
+
+	outLinks := parse(tc.url, string(html))
+	
+	if len(outLinks) != tc.count {
+		t.Errorf("Parse of %q, Outlinks expected %d, actual %d", tc.url, tc.count, len(outLinks))
+	}
 	}
 }

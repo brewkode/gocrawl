@@ -42,18 +42,18 @@ func fetchUrl(url Url) (UrlResponse, error) {
 func fetcher(input chan Url, output chan Url) {
 	for url := range input {
 		urlResponse, error := fetchUrl(url)
-		if error == nil {
-			out := Url{url: urlResponse.url, html: urlResponse.html, redirectedToUrl: urlResponse.redirectedUrl}
+		if error != nil {
+			out := Url{url: urlResponse.url}
 			output <- out
 		} else {
 			// empty body for downstream processing to ignore
-			out := Url{url: urlResponse.url}
+			out := Url{url: urlResponse.url, html: urlResponse.html, redirectedToUrl: urlResponse.redirectedUrl}
 			output <- out
 		}
 	}
 }
 
-func processHtml(url string, html string) []string {
+func parse(url string, html string) []string {
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
   	if err != nil {
     		fmt.Println(err)
@@ -61,7 +61,7 @@ func processHtml(url string, html string) []string {
   	}
 	// Process anchor tags. Resolve relative urls. Ignore urls from other host
 	a := doc.Find("a")
-	fmt.Printf("Url: %q, <a> tags: %d", url, a.Length())
+	fmt.Printf("Url: %q, <a> tags: %d\n", url, a.Length())
 	urlsFromAnchor := a.FilterFunction(func(i int, s *goquery.Selection) bool {
 		href, exists := s.Attr("href")
 		return exists && IsSameHost(url, href)
@@ -73,7 +73,7 @@ func processHtml(url string, html string) []string {
 	// Handle images. They might come from CDNs, so same host check will fail
 	// Intentionally ignoring the other assets from link / script tags
 	img := doc.Find("img")
-	fmt.Printf("Url: %q, <img> tags: %d", url, img.Length())
+	fmt.Printf("Url: %q, <img> tags: %d\n", url, img.Length())
 	imgUrls := img.FilterFunction(func(i int, s *goquery.Selection) bool {
 		_, srcExists := s.Attr("src")
 		return srcExists
@@ -83,19 +83,19 @@ func processHtml(url string, html string) []string {
 	})
 	
 	outLinks := append(urlsFromAnchor, imgUrls...)
-	fmt.Printf("Got %d url(s) from html of %q\n", (len(outLinks)), url)
+	fmt.Printf("Got %d outgoing link(s) from html of %q\n", (len(outLinks)), url)
 	return outLinks
 }
 
 func linkExtractor(input chan Url, output chan Url) {
 	for url := range input {
-		for _, outLink := range processHtml(url.GetUrl(), url.html) {
+		for _, outLink := range parse(url.GetUrl(), url.html) {
 			output <- Url{url: outLink}
 		}
 	}
 }
 
-// ----------------- Utility stuff
+// ----------------- Utilities
 func squashErrors(errors []error) error {
 	var err *multierror.Error
 	for _, e := range errors {
