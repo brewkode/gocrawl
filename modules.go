@@ -8,18 +8,26 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+func shouldCrawl(resolvedUrl string, alreadySeen map[string]bool) bool {
+	if _, isPresent := alreadySeen[resolvedUrl]; !isPresent && resolvedUrl != "" {
+		fmt.Printf("Url %q not seen. Forwarding it.\n", resolvedUrl)
+		return true
+	} else if isPresent {
+		fmt.Printf("Url %q already crawled. Skipping it.\n", resolvedUrl)
+		return false
+	} else {
+		fmt.Printf("Empty or null url. Ignoring it\n")
+		return false
+	}
+}
+
 func urlFilter(input <-chan Url, output chan Url) {
 	alreadySeen := make(map[string]bool)
 	for url := range input { 
 		resolvedUrl := url.GetUrl()
-		if _, isPresent := alreadySeen[resolvedUrl]; !isPresent && resolvedUrl != "" {
-			fmt.Printf("Url %q not seen. Forwarding it.\n", resolvedUrl)
+		if shouldCrawl(resolvedUrl, alreadySeen) {
 			alreadySeen[resolvedUrl] = true
 			output <- url
-		} else if isPresent {
-			fmt.Printf("Url %q already crawled. Skipping it.\n", resolvedUrl)
-		} else {
-			fmt.Printf("Empty or null url. Ignoring it\n")
 		}
 	}
 }

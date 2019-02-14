@@ -59,15 +59,66 @@ func TestParse(t *testing.T) {
 	}
 
 	for _, tc := range test_cases {
-	html, err := ioutil.ReadFile(tc.path)
-	if err != nil {
-		t.Errorf("Failed reading from file")
-	}
-
-	outLinks := parse(tc.url, string(html))
+	outLinks := parse(tc.url, readFile(tc.path, t))
 	
 	if len(outLinks) != tc.count {
 		t.Errorf("Parse of %q, Outlinks expected %d, actual %d", tc.url, tc.count, len(outLinks))
 	}
 	}
+}
+
+func TestLinkExtractor(t *testing.T) {
+	test_cases := []struct {
+		url, path string
+		count int
+	}{
+		{"http://brewkode.com", "tests/fixtures/brewkode.html", 6},
+	}
+	
+	expected := make(map[string]int)
+	for _, tc := range test_cases {
+		expected[tc.url] = tc.count
+	}
+
+	input := make(chan Url, len(test_cases))
+	output := make(chan Url, len(test_cases))
+	var wg sync.WaitGroup
+	
+	wg.Add(1)
+	
+	// Producer
+	go func() {
+		defer close(input)
+		defer wg.Done()
+		
+		for _, tc := range test_cases {
+			input <- Url{url:tc.url, html:readFile(tc.path, t)}
+		}
+	}()
+	
+	// Wait for producer to be done
+	wg.Wait()
+	
+	// Consumer
+	go func() {
+		defer close(output)
+		linkExtractor(input, output)
+	}()
+	
+	// Blocking wait on the output channel
+	// range over output exits because the consumer does a `defer close(output)`
+	// And, this blocking doesn't result in deadlock because these channels are "buffered"
+	for x := range output {
+		if len(x.outLinks) != expected[x.url] {
+			t.Errorf("ExtractLinks for %q: Expected %d, Actual %d", x.url, expected[x.url], len(x.outLinks))
+		}
+	}
+}
+
+func readFile(path string, t *testing.T) string {
+	html, err := ioutil.ReadFile(path)
+        if err != nil {
+                t.Errorf("Failed reading from file")
+        }
+	return string(html)
 }

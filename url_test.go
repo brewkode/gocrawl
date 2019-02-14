@@ -77,7 +77,6 @@ func TestResolveUrl(t *testing.T) {
    }
 }
 
-
 func TestIsSuccess(t *testing.T) {
    test_cases := []struct {
         url UrlResponse
