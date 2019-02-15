@@ -95,10 +95,31 @@ func parse(url string, html string) []string {
 	return outLinks
 }
 
-func linkExtractor(input chan Url, output chan Url) {
+func linkExtractor(input chan Url, output chan Url, sitemapInput chan Url) {
 	for url := range input {
-		for _, outLink := range parse(url.GetUrl(), url.html) {
+		outLinks := parse(url.GetUrl(), url.html)
+		
+		// send to site map builder
+		go func() {
+			sitemapInput <- Url{url: url.GetUrl(), outLinks: outLinks}
+		}()
+		
+		// send back the urls for crawl
+		for _, outLink := range outLinks {
 			output <- Url{url: outLink}
+		}
+	}
+}
+
+func siteMapBuilder(extractedLinks chan Url, sitemapRequest chan string) {
+	var siteMap SiteMap
+	for { 
+		select {
+		case url := <-extractedLinks:
+			siteMap.Add(url.url, url.outLinks...)
+		case req := <-sitemapRequest:
+			fmt.Printf("Adjacency of url(%q) :: %q\n", req, siteMap.GetAdjacency(req))
+		default:
 		}
 	}
 }

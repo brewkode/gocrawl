@@ -82,6 +82,7 @@ func TestLinkExtractor(t *testing.T) {
 
 	input := make(chan Url, len(test_cases))
 	output := make(chan Url, len(test_cases))
+	sitemapInput := make(chan Url, len(test_cases))
 	var wg sync.WaitGroup
 	
 	wg.Add(1)
@@ -102,7 +103,7 @@ func TestLinkExtractor(t *testing.T) {
 	// Consumer
 	go func() {
 		defer close(output)
-		linkExtractor(input, output)
+		linkExtractor(input, output, sitemapInput)
 	}()
 	
 	// Blocking wait on the output channel
