@@ -5,14 +5,17 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"flag"
 )
 
 func main() {
+	homePagePtr := flag.String("home", "http://brewkode.com", "home page of the site that we want to crawl")
+	flag.Parse()
+
 	BUFFER_SIZE := 1024
 	// safety buffer value used for all channels - to prevent from deadlock or rogue pages, etc
 	// did not find a need for it during test crawls
 	SAFETY_BUFFER := 32 
-	homePage := "http://brewkode.com"
 	urlInput := make(chan Url, BUFFER_SIZE)
 	toCrawl := make(chan Url, SAFETY_BUFFER)
 	htmlOutput := make(chan Url, SAFETY_BUFFER)
@@ -21,7 +24,7 @@ func main() {
 
 	// Seeding
 	go func() {
-		urlInput <- Url{url: homePage}
+		urlInput <- Url{url: *homePagePtr}
 	}()
 
 	go urlFilter(urlInput, toCrawl)
@@ -35,7 +38,6 @@ func main() {
 		reader := bufio.NewReader(os.Stdin)
 		inpUrlWithNL, _ := reader.ReadString('\n')
 		inpUrl := strings.TrimSuffix(inpUrlWithNL, "\n")
-		fmt.Printf("Querying for adjacent urls of %q", inpUrl)
 		siteMapQuery <- inpUrl
 	}
 }
