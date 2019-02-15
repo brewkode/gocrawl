@@ -40,7 +40,7 @@ The solution is built using core primitives of golang - viz., goroutines & chann
 - since all these blocks are connected via channels, we can scale individual blocks as we find bottlenecks
 - communication via channels allows the blocks to be (potentially) even scaled out if need be
 
-## Limitations
+## Design Limitations
 - State management in the Filter & Sitemap Builder limits scale. Filter is trivial and is not a big deal. If memory footprint becomes a concern, we could move to some probabilistic data structures too
 - Sitemap builder manages state in-memory; addressing large volume of urls and their sitemap is possible by way of using a more appropriate data store
 
@@ -52,3 +52,6 @@ The solution is built using core primitives of golang - viz., goroutines & chann
 - To crawl a different website: `./gocrawl -home=<home_page>`
 - The program waits(in a loop) to read `url` on stdin for which the incoming/outgoing urls will be printed to screen.
 
+## TODOs
+- use a proper dependency manager
+- implement tee'd channel so that the link extractor can use that as its output instead of taking two output channel args

@@ -4,6 +4,11 @@ VERSION = 0.0.1
 test:
 	go test -v -race github.com/brewkode/gocrawl
 
+setup:
+	go get github.com/parnurzeal/gorequest
+	go get github.com/PuerkitoBio/goquery
+	go get github.com/hashicorp/go-multierror
+
 build:
 	go build -o ${APP} .
 
