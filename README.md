@@ -46,12 +46,14 @@ The solution is built using core primitives of golang - viz., goroutines & chann
 
 ## Build & Run
 - `make clean test`
+- `make setup`
 - `make build`
 - For usage `./gocrawl --help`
-- To crawl with default home page: `./gocrawl`
+- To crawl with a default website: `./gocrawl`
 - To crawl a different website: `./gocrawl -home=<home_page>`
 - The program waits(in a loop) to read `url` on stdin for which the incoming/outgoing urls will be printed to screen.
 
 ## TODOs
 - use a proper dependency manager
+- redirection mapping info isn't preserved internally.
 - implement tee'd channel so that the link extractor can use that as its output instead of taking two output channel args
