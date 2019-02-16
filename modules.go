@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"regexp"
 	"github.com/parnurzeal/gorequest"
 	"github.com/hashicorp/go-multierror"
 	"github.com/PuerkitoBio/goquery"
@@ -10,22 +11,28 @@ import (
 
 func shouldCrawl(resolvedUrl string, alreadySeen map[string]bool) bool {
 	if _, isPresent := alreadySeen[resolvedUrl]; !isPresent && resolvedUrl != "" {
-		fmt.Printf("Url %q not seen. Forwarding it.\n", resolvedUrl)
+		// fmt.Printf("Url %q not seen. Forwarding it.\n", resolvedUrl)
 		return true
 	} else if isPresent {
-		fmt.Printf("Url %q already crawled. Skipping it.\n", resolvedUrl)
+		// fmt.Printf("Url %q already crawled. Skipping it.\n", resolvedUrl)
 		return false
 	} else {
-		fmt.Printf("Empty or null url. Ignoring it\n")
+		// fmt.Printf("Empty or null url. Ignoring it\n")
 		return false
 	}
+}
+
+
+var inValidUrlExtensions = regexp.MustCompile(".*(css|js|bmp|gif|jpe?g|svg|png|tiff?|mid|mp2|mp3|mp4|wav|avi|mov|mpeg|ram|m4v|pdf|wmv|swf|wma|zip|rar|gz|xml|ico|fla|flv|swt|swc)$")
+func validUrlExtension(url string) bool {
+	return !inValidUrlExtensions.MatchString(url)
 }
 
 func urlFilter(input <-chan Url, output chan Url) {
 	alreadySeen := make(map[string]bool)
 	for url := range input { 
 		resolvedUrl := url.GetUrl()
-		if shouldCrawl(resolvedUrl, alreadySeen) {
+		if shouldCrawl(resolvedUrl, alreadySeen) && validUrlExtension(resolvedUrl) {
 			alreadySeen[resolvedUrl] = true
 			output <- url
 		}
@@ -43,21 +50,17 @@ func fetchUrl(url Url) (UrlResponse, error) {
 		return UrlResponse{}, err
 	}
 	
-	fmt.Printf("Successfully fetched %q. Content Size: %d\n", url.url, len(body))
+	fmt.Printf("Successfully fetched %q. StatusCode: %d, Content Size: %d\n", url.url, resp.StatusCode, len(body))
 	return *NewUrlResponse(url.url, resp, body), nil
 }
 
 func fetcher(input chan Url, output chan Url) {
 	for url := range input {
 		urlResponse, error := fetchUrl(url)
-		if error != nil {
-			out := Url{url: urlResponse.url}
-			output <- out
-		} else {
-			// empty body for downstream processing to ignore
+		if error == nil {
 			out := Url{url: urlResponse.url, html: urlResponse.html, redirectedToUrl: urlResponse.redirectedUrl}
 			output <- out
-		}
+		} 
 	}
 }
 
