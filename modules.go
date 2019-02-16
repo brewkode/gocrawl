@@ -23,7 +23,7 @@ func shouldCrawl(resolvedUrl string, alreadySeen map[string]bool) bool {
 }
 
 
-var inValidUrlExtensions = regexp.MustCompile(".*(css|js|bmp|gif|jpe?g|svg|png|tiff?|mid|mp2|mp3|mp4|wav|avi|mov|mpeg|ram|m4v|pdf|wmv|swf|wma|zip|rar|gz|xml|ico|fla|flv|swt|swc)$")
+var inValidUrlExtensions = regexp.MustCompile(".*(css|js|bmp|gif|jpe?g|svg|png|pnj|mng|tiff?|mid|mp2|mp3|mp4|wav|avi|mov|mpeg|ram|m4v|pdf|wmv|swf|wma|zip|rar|gz|xml|ico|fla|flv|swt|swc)$")
 func validUrlExtension(url string) bool {
 	return !inValidUrlExtensions.MatchString(url)
 }
@@ -121,7 +121,8 @@ func siteMapBuilder(extractedLinks chan Url, sitemapRequest chan string) {
 		case url := <-extractedLinks:
 			siteMap.Add(url.url, url.outLinks...)
 		case req := <-sitemapRequest:
-			fmt.Printf("Adjacency of url(%q) :: %q\n", req, siteMap.GetAdjacency(req))
+			fmt.Printf("Sitemap of url(%q) ::\n", req)
+			fmt.Printf(siteMap.print(req, 3))
 		default:
 		}
 	}

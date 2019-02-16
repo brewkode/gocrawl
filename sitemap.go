@@ -1,5 +1,7 @@
 package main
 
+import "strings"
+
 type SiteMap struct {
 	outgoing map[string][]string
 	incoming map[string][]string
@@ -43,4 +45,26 @@ func (siteMap *SiteMap) GetAdjacency(url string) AdjacentUrls {
 		adjUrls.incoming = in
 	}
 	return adjUrls
+}
+
+func (siteMap *SiteMap) print(url string, depth int) string {
+	visited := make(map[string]bool)
+	return build(*siteMap, url, depth, visited)+"\n"
+}
+
+func build(siteMap SiteMap, url string, depth int, visited map[string]bool) string {
+	entries := []string{}
+	entries = append(entries, indented(url, depth+2))
+	visited[url] = true
+	outLinks, _  := siteMap.outgoing[url]
+	for _, outLink := range outLinks {
+		if _, present := visited[outLink]; !present {
+			entries = append(entries, build(siteMap, outLink, depth+1, visited))
+		}
+	}
+	return strings.Join(entries, "\n")
+}
+
+func indented(url string, depth int) string {
+	return strings.Repeat(" ", depth)+"- "+url
 }
