@@ -2,10 +2,10 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os"
 	"strings"
-	"flag"
 	"time"
 )
 
@@ -30,26 +30,26 @@ func main() {
 	// fans-out extracted links to two different channels
 	go linkExtractor(htmlOutput, urlInput, extractedLinks)
 	go siteMapBuilder(extractedLinks, siteMapQuery)
-	
+
 	// identifying DONE
-	// taking an approach to see if there are no items in any of the channels 
+	// taking an approach to see if there are no items in any of the channels
 	// for a prolonged period of time and then deciding DONE based on it.
 	emptyQueues := 0
 	running := true
 	progress(urlInput, toCrawl, htmlOutput)
 	for running {
 		select {
-			case <-time.Tick(30 * time.Second):
-				if progress(urlInput, toCrawl, htmlOutput) {
-					emptyQueues++
-				} else {
-					emptyQueues = 0
-				}
-				
-				if emptyQueues > 5 {
-					running = false
-					break
-				}
+		case <-time.Tick(30 * time.Second):
+			if progress(urlInput, toCrawl, htmlOutput) {
+				emptyQueues++
+			} else {
+				emptyQueues = 0
+			}
+
+			if emptyQueues > 5 {
+				running = false
+				break
+			}
 		}
 	}
 	fmt.Printf("Crawling completed.\n")

@@ -16,7 +16,7 @@ func (siteMap *SiteMap) addParent(child string, parent string) {
 	if siteMap.incoming == nil {
 		siteMap.incoming = make(map[string][]string)
 	}
-	
+
 	if elem, ok := siteMap.incoming[child]; ok {
 		siteMap.incoming[child] = append(elem, parent)
 	} else {
@@ -49,14 +49,14 @@ func (siteMap *SiteMap) GetAdjacency(url string) AdjacentUrls {
 
 func (siteMap *SiteMap) print(url string, depth int) string {
 	visited := make(map[string]bool)
-	return build(*siteMap, url, depth, visited)+"\n"
+	return build(*siteMap, url, depth, visited) + "\n"
 }
 
 func build(siteMap SiteMap, url string, depth int, visited map[string]bool) string {
 	entries := []string{}
 	entries = append(entries, indented(url, depth+2))
 	visited[url] = true
-	outLinks, _  := siteMap.outgoing[url]
+	outLinks, _ := siteMap.outgoing[url]
 	for _, outLink := range outLinks {
 		if _, present := visited[outLink]; !present {
 			entries = append(entries, build(siteMap, outLink, depth+1, visited))
@@ -66,5 +66,5 @@ func build(siteMap SiteMap, url string, depth int, visited map[string]bool) stri
 }
 
 func indented(url string, depth int) string {
-	return strings.Repeat(" ", depth)+"- "+url
+	return strings.Repeat(" ", depth) + "- " + url
 }

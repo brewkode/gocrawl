@@ -1,18 +1,18 @@
 package main
 
 import (
-       "testing"
-       )
+	"testing"
+)
 
 func TestGetAdjaceny(t *testing.T) {
 	test_cases := []struct {
-		url string
+		url      string
 		outgoing []string
-		adj AdjacentUrls 
-   	}{
-     		{"home", []string{"url1", "url2", "url3"}, AdjacentUrls{outgoing: []string{"url1", "url2", "url3"}}},
-     		{"url1", []string{"url11", "url21", "home"}, AdjacentUrls{incoming: []string{"home"}, outgoing: []string{"url11", "url21", "url31"}}},
-   	}
+		adj      AdjacentUrls
+	}{
+		{"home", []string{"url1", "url2", "url3"}, AdjacentUrls{outgoing: []string{"url1", "url2", "url3"}}},
+		{"url1", []string{"url11", "url21", "home"}, AdjacentUrls{incoming: []string{"home"}, outgoing: []string{"url11", "url21", "url31"}}},
+	}
 	// intentionally creating a sitemap outside
 	// individual test cases will keep adding to same sitemap
 	// every test will expect results based on the accumulated graph

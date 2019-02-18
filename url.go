@@ -1,24 +1,22 @@
 package main
 
-
 import (
 	"github.com/parnurzeal/gorequest"
 	urllib "net/url"
 )
 
-
 type Url struct {
-	url string
+	url             string
 	redirectedToUrl string
-	html string
-	outLinks []string
+	html            string
+	outLinks        []string
 }
 
 type UrlResponse struct {
-	url string
-	status int
+	url           string
+	status        int
 	redirectedUrl string
-	html string
+	html          string
 }
 
 func (url *Url) GetUrl() string {
@@ -60,7 +58,7 @@ func ResolveUrl(baseUrl string, relativeUrl string) string {
 
 func NewUrlResponse(url string, resp gorequest.Response, body string) *UrlResponse {
 	redirUrl := resp.Request.URL.String() // returns Location header's value if non-empty
-	if  redirUrl == url { // case of no redirection
+	if redirUrl == url {                  // case of no redirection
 		redirUrl = ""
 	}
 	return &UrlResponse{url, resp.StatusCode, redirUrl, body}
@@ -73,4 +71,3 @@ func (resp *UrlResponse) IsSuccess() bool {
 func (resp *UrlResponse) IsSuccessfulRedirect() bool {
 	return resp.status > 300 && resp.status < 400 && resp.redirectedUrl != ""
 }
-
