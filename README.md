@@ -15,6 +15,7 @@ The solution is built using core primitives of golang - viz., goroutines & chann
 - scale
 
 ## Block diagram
+```
 +---------------+
 |  Seeder       |
 |               |
@@ -35,6 +36,7 @@ The solution is built using core primitives of golang - viz., goroutines & chann
          |                                                   |
          +---------------------------------------------------+
 
+```
 
 ## Scaleability
 - since all these blocks are connected via channels, we can scale individual blocks as we find bottlenecks
