@@ -59,3 +59,4 @@ The solution is built using core primitives of golang - viz., goroutines & chann
 - use a proper dependency manager
 - redirection mapping info isn't preserved internally.
 - implement tee'd channel so that the link extractor can use that as its output instead of taking two output channel args
+- Integrate codacy to monitor coverage
